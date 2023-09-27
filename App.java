@@ -11,13 +11,15 @@ public class App extends Application {
     static int numPoints = 10000;
     static int numThreads = 10;
 
-    static int n = 1;
-    static int l = 0;
+    static int threshold = 1;
+
+    static int n = 2;
+    static int l = 1;
     static int ml = 0;
 
     static int Z = 1;
 
-    static final double a0 = 0.6529;
+    static final double a0 = 0.0529;
 
     FileWriter fileWriter;
 
@@ -43,7 +45,7 @@ public class App extends Application {
             pm.setThread(t);
             fileNames[i] = t.getName();
             Thread.ofVirtual().start(t);
-            //System.out.println(t.getName());
+            // System.out.println(t.getName());
         }
 
         while (threads.size() > 0) {
@@ -52,7 +54,7 @@ public class App extends Application {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-        
+
         }
 
         combineFiles();
@@ -70,7 +72,7 @@ public class App extends Application {
                     fileWriter.write(t);
                     k++;
                 }
-                
+
             }
             System.out.println(k);
         } catch (IOException e) {
@@ -99,7 +101,7 @@ class PointMaker implements Runnable {
         }
 
         for (int i = 0; i < App.numPoints / App.numThreads; i++) {
-            //System.out.println(i);
+            // System.out.println(i);
             boolean again = true;
             while (again == true) {
                 double r = Math.random();
@@ -109,17 +111,26 @@ class PointMaker implements Runnable {
                 double psi = 0;
 
                 if (App.n == 1 && App.l == 0 && App.ml == 0) {
-                    psi = (1 / Math.sqrt(Math.PI)) * Math.pow((App.Z / App.a0), 3.0 / 2)
+                    psi = (1.0 / Math.sqrt(Math.PI)) * Math.pow((App.Z / App.a0), 3.0 / 2)
                             * Math.pow(Math.E, (-(App.Z / App.a0) * r));
+                } else if (App.n == 2 && App.l == 0 && App.ml == 0) {
+                    psi = (1.0 / (4.0 * Math.sqrt(2 * Math.PI))) * Math.pow((App.Z / App.a0), 3.0 / 2)
+                            * (2 - ((double) App.Z / App.a0 * r)) * Math.pow(Math.E, (-(App.Z / (2 * App.a0)) * r));
+                } else if (App.n == 3 && App.l == 0 && App.ml == 0) {
+                    psi = (1.0 / (81.0 * Math.sqrt(3 * Math.PI))) * Math.pow((App.Z / App.a0), 3.0 / 2)
+                            * (27.0 - ((18.0 * App.Z * r) / App.a0) + (2.0 * App.Z * App.Z * r * r) / (App.a0 * App.a0)) * Math.pow(Math.E, (-(App.Z / (3.0 * App.a0)) * r));
+                } else if (App.n == 2 && App.l == 1 && App.ml == 0) {
+                    psi = (1.0 / (4 * Math.sqrt(2 * Math.PI))) * Math.pow(App.Z/App.a0, 3.0/2) * (App.Z*r /App.a0) * Math.pow(Math.E, (-(App.Z/(2*App.a0))*r)) * Math.cos(theta);
                 }
 
-                if (Math.pow(psi, 2) <= 10) {
+                double d = 1.0 / Math.pow(psi, 2);
+                if (Math.random() * d >= 0.3) {
                     again = false;
                     double x = r * Math.sin(theta) * Math.cos(phi);
                     double y = r * Math.sin(theta) * Math.sin(phi);
                     double z = r * Math.cos(theta);
 
-                    String s = String.format("%f, %f, %f\n", x, y, z);
+                    String s = String.format("%f, %f, %f, %f\n", x, y, z, psi*psi);
 
                     try {
                         runnableWriter.write(s);
@@ -127,7 +138,7 @@ class PointMaker implements Runnable {
                         e.printStackTrace();
                     }
                 } else {
-                    System.out.println("kickback");
+                    // System.out.println("kickback");
                     again = true;
                 }
             }
